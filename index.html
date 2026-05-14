@@ -1,228 +1,264 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ananta Elite | Master Node Validator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #020202;
-            --surface: rgba(12, 12, 12, 0.85);
-            --red: #E50914;
-            --red-glow: rgba(229, 9, 20, 0.3);
-            --green: #00FF88;
-            --green-glow: rgba(0, 255, 136, 0.2);
-            --border: rgba(255, 255, 255, 0.06);
-            --text-dim: #777;
-        }
+import customtkinter as ctk
+from tkinter import ttk, filedialog, messagebox
+import os
+import shutil
+import threading
+import webbrowser
+import time
+import requests
+import re
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background-color: var(--bg); color: white; font-family: 'Syne', sans-serif;
-            min-height: 100vh; display: flex; justify-content: center; align-items: center;
-            background-image: radial-gradient(circle at 50% 0%, #1a0505 0%, transparent 50%);
-            overflow: hidden;
-        }
+# Global Styling
+ctk.set_appearance_mode("dark") 
+ctk.set_default_color_theme("blue")
 
-        .container { width: 95%; max-width: 1400px; height: 85vh; display: flex; gap: 30px; z-index: 2; }
+class EliteGlassChecker(ctk.CTk):
+    def __init__(self):
+        super().__init__()
 
-        /* Sidebar */
-        .sidebar {
-            width: 380px; background: var(--surface); backdrop-filter: blur(30px);
-            border: 1px solid var(--border); border-radius: 30px; padding: 40px;
-            display: flex; flex-direction: column; box-shadow: 0 20px 80px rgba(0,0,0,0.9);
-        }
+        # Window Setup - Reverted to Standard OS Controls
+        self.title("Netflix Checker Elite - Ananta v4.2.3")
+        self.geometry("1300x850")
+        self.configure(fg_color="#050505") 
+        self.resizable(True, True)
+
+        # Variables
+        self.total = 0
+        self.checked_count = 0
+        self.alive = 0
+        self.dead = 0
+        self.is_running = False
+        self._stop_event = threading.Event()
+        self.proxies = []
+        self.current_proxy_index = 0
+
+        self.folders = {"queue": "cookies", "hits": "hits", "dead": "dead"}
+        for f in self.folders.values(): 
+            os.makedirs(f, exist_ok=True)
         
-        .brand {
-            text-align: center; padding: 30px 20px; border-radius: 20px;
-            background: linear-gradient(180deg, rgba(229,9,20,0.05) 0%, transparent 100%);
-            border: 1px solid var(--border); margin-bottom: 40px;
-            position: relative; overflow: hidden;
-        }
-        .brand::before { content:''; position:absolute; top:0; left:20%; width:60%; height:2px; background:var(--red); box-shadow: 0 0 15px var(--red); }
-        .brand h2 { font-size: 0.7rem; color: var(--text-dim); letter-spacing: 6px; }
-        .brand h1 { font-size: 3.5rem; letter-spacing: -2px; text-shadow: 0 0 30px var(--red-glow); margin-top: 5px; }
+        self.setup_ui()
+        self.reset_all()
 
-        .stat-block { background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 20px; padding: 25px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .stat-block .label { color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-block .value { font-family: 'JetBrains Mono'; font-size: 2.5rem; }
-        .val-live { color: var(--green); text-shadow: 0 0 15px var(--green-glow); }
-        .val-dead { color: var(--red); text-shadow: 0 0 15px var(--red-glow); }
+    def setup_ui(self):
+        # ==================== SIDEBAR ====================
+        self.sidebar = ctk.CTkFrame(self, width=380, corner_radius=0, fg_color="#080808", border_width=1, border_color="#1A1A1A")
+        self.sidebar.pack(side="left", fill="y")
+        self.sidebar.pack_propagate(False)
 
-        /* Main Console */
-        .console {
-            flex: 1; background: var(--surface); border: 1px solid var(--border);
-            border-radius: 30px; padding: 30px; display: flex; flex-direction: column;
-            backdrop-filter: blur(30px); position: relative;
-        }
+        # Branding
+        self.brand_frame = ctk.CTkFrame(self.sidebar, fg_color="#0F0F0F", corner_radius=20, border_width=2, border_color="#E50914")
+        self.brand_frame.pack(pady=(50, 30), padx=20, fill="x")
 
-        .input-area { position: relative; margin-bottom: 25px; }
-        textarea {
-            width: 100%; height: 180px; background: #050505; border: 1px solid var(--border);
-            border-radius: 20px; padding: 25px; color: var(--green); font-family: 'JetBrains Mono';
-            font-size: 0.9rem; resize: none; outline: none; transition: 0.3s;
-        }
-        textarea:focus { border-color: var(--red); box-shadow: inset 0 0 20px rgba(229,9,20,0.1); }
+        ctk.CTkLabel(self.brand_frame, text="Powered By\nAnanta", font=ctk.CTkFont(size=42, weight="bold"), text_color="#E50914").pack(pady=(20, 5))
+        ctk.CTkLabel(self.brand_frame, text="PREMIUM ELITE CHECKER", font=ctk.CTkFont(size=14, weight="bold"), text_color="#AAAAAA").pack(pady=(0, 20))
 
-        .control-panel { display: flex; align-items: center; gap: 25px; background: #050505; padding: 20px 30px; border-radius: 20px; border: 1px solid var(--border); }
-        .sys-status { flex: 1; }
-        .sys-status p { color: var(--text-dim); font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 8px; }
-        .progress-track { width: 100%; height: 6px; background: #111; border-radius: 3px; overflow: hidden; }
-        .progress-fill { width: 0%; height: 100%; background: var(--red); transition: 0.3s; box-shadow: 0 0 10px var(--red); }
+        # Menu Container
+        self.menu_container = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        self.menu_container.pack(fill="x", padx=25, pady=20)
 
-        .btn-launch {
-            background: transparent; border: 2px solid var(--green); color: var(--green);
-            width: 70px; height: 70px; border-radius: 50%; font-size: 1.5rem;
-            display: flex; justify-content: center; align-items: center; cursor: pointer;
-            transition: 0.4s; box-shadow: 0 0 20px var(--green-glow);
-        }
-        .btn-launch:hover { background: var(--green); color: black; transform: scale(1.1); box-shadow: 0 0 40px var(--green); }
-        .btn-launch:disabled { border-color: var(--text-dim); color: var(--text-dim); box-shadow: none; cursor: not-allowed; transform: none; background: transparent; }
+        # Sidebar Menu Items (Perfectly Aligned)
+        self.create_glass_menu_item("✈️", "TELEGRAM CHANNEL", lambda: webbrowser.open("https://t.me/anantaabid"))
+        self.create_glass_menu_item("🍪", "COOKIES CAPTURE", self.cookies_capture)
+        self.create_glass_menu_item("🌐", "PROXY SETTINGS", self.proxy_settings)
+        self.create_glass_menu_item("📧", "CONTACT US", lambda: webbrowser.open("mailto:support@ananta.com"))
 
-        /* Data Grid */
-        .grid-container { flex: 1; overflow-y: auto; margin-top: 20px; padding-right: 10px; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        th { text-align: left; padding: 0 20px; color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; font-family: 'JetBrains Mono'; }
-        td { padding: 18px 20px; background: rgba(255,255,255,0.02); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono'; font-size: 0.85rem; }
-        td:first-child { border-left: 1px solid var(--border); border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
-        td:last-child { border-right: 1px solid var(--border); border-top-right-radius: 12px; border-bottom-right-radius: 12px; text-align: right; }
+        # Footer Version
+        self.version_box = ctk.CTkFrame(self.sidebar, fg_color="#0D0D0D", corner_radius=20, border_width=1, border_color="#1F1F1F")
+        self.version_box.pack(side="bottom", fill="x", padx=30, pady=35)
+        ctk.CTkLabel(self.version_box, text="Version: 4.2.3 Standard", text_color="#555", font=ctk.CTkFont(size=12, weight="bold")).pack(pady=15)
 
-        .tag { padding: 6px 14px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; letter-spacing: 1px; }
-        .tag-live { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
-        .tag-dead { background: rgba(229,9,20,0.1); color: var(--red); border: 1px solid rgba(229,9,20,0.3); }
+        # ==================== MAIN VIEW ====================
+        self.main_view = ctk.CTkFrame(self, fg_color="transparent")
+        self.main_view.pack(side="right", fill="both", expand=True, padx=40, pady=30)
 
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-    </style>
-</head>
-<body>
+        self.cards_frame = ctk.CTkFrame(self.main_view, fg_color="transparent")
+        self.cards_frame.pack(fill="x", pady=10)
+        self.total_lbl = self.create_glass_card("📁", "Total Queue", "0", 0, "#4E82E8")
+        self.alive_lbl = self.create_glass_card("✅", "Live Hits", "0", 1, "#00FF88")
+        self.dead_lbl = self.create_glass_card("❌", "Dead Files", "0", 2, "#FF4444")
+        self.proxy_lbl = self.create_glass_card("🌐", "Proxies Loaded", "0", 3, "#FFAA00")
 
-<div class="container">
-    <div class="sidebar">
-        <div class="brand">
-            <h2>Powered By</h2>
-            <h1>ANANTA</h1>
-        </div>
+        # Status Bar Area (Slate Gray)
+        self.prog_panel = ctk.CTkFrame(self.main_view, fg_color="#1A1A1A", corner_radius=15, border_width=1, border_color="#2A2A2A")
+        self.prog_panel.pack(fill="x", pady=15)
+        self.progress_bar = ctk.CTkProgressBar(self.prog_panel, height=8, corner_radius=10, progress_color="#555555", fg_color="#0D0D0D")
+        self.progress_bar.pack(fill="x", padx=25, pady=(20, 10))
+        self.progress_bar.set(0)
+        self.progress_text = ctk.CTkLabel(self.prog_panel, text="System Standby", font=ctk.CTkFont(size=12), text_color="#888888")
+        self.progress_text.pack(pady=(0, 15))
 
-        <div class="stat-block">
-            <span class="label">Total Queue</span>
-            <span class="value" id="val-total" style="color:white">0</span>
-        </div>
-        <div class="stat-block">
-            <span class="label">Live Hits</span>
-            <span class="value val-live" id="val-live">0</span>
-        </div>
-        <div class="stat-block">
-            <span class="label">Dead Assets</span>
-            <span class="value val-dead" id="val-dead">0</span>
-        </div>
+        # Table Area (Slate Gray)
+        self.table_container = ctk.CTkFrame(self.main_view, fg_color="#1A1A1A", corner_radius=20, border_width=2, border_color="#252525")
+        self.table_container.pack(fill="both", expand=True)
         
-        <div style="margin-top: auto; text-align: center; color: #444; font-size: 0.7rem; font-family: 'JetBrains Mono';">
-            SERVER: DISCONNECTED
-        </div>
-    </div>
+        style = ttk.Style()
+        style.theme_use("default")
+        style.configure("Treeview", rowheight=35, background="#1A1A1A", foreground="#DDDDDD", fieldbackground="#1A1A1A", borderwidth=0)
+        style.configure("Treeview.Heading", background="#252525", foreground="#FFFFFF", relief="flat")
+        style.map("Treeview", background=[('selected', '#333333')])
 
-    <div class="console">
-        <div class="input-area">
-            <textarea id="cookie-data" placeholder="[ ENTER COOKIE DATA (JSON OR NETSCAPE) HERE ]"></textarea>
-        </div>
+        self.tree = ttk.Treeview(self.table_container, columns=("File", "Status", "Note"), show="headings")
+        for col in ["File", "Status", "Note"]: self.tree.heading(col, text=col)
+        self.tree.column("File", width=260, anchor="w")
+        self.tree.column("Status", width=100, anchor="center")
+        self.tree.column("Note", width=420, anchor="center")
+        self.tree.pack(fill="both", expand=True, padx=15, pady=15)
 
-        <div class="control-panel">
-            <div class="sys-status">
-                <p id="status-text">AWAITING INPUT...</p>
-                <div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
-            </div>
-            <button class="btn-launch" id="btn-start" onclick="initiateScan()">▶</button>
-        </div>
-
-        <div class="grid-container">
-            <table>
-                <thead><tr><th>Asset ID</th><th>Session State</th><th>Server Response</th></tr></thead>
-                <tbody id="log-table"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<script>
-    let hitCount = 0, deadCount = 0;
-
-    // Format parser ensures the backend receives clean data
-    function formatForBackend(raw) {
-        raw = raw.trim();
-        if (raw.startsWith('[') && raw.endsWith(']')) {
-            try {
-                const j = JSON.parse(raw);
-                return j.map(c => `${c.name}=${c.value}`).join('; ');
-            } catch(e) { return null; }
-        }
-        if (raw.includes('\t')) {
-            return raw.split('\n').filter(l => l.trim() && !l.startsWith('#'))
-                .map(l => {
-                    const p = l.split('\t');
-                    return p.length >= 7 ? `${p[5].trim()}=${p[6].trim()}` : null;
-                }).filter(x => x).join('; ');
-        }
-        return raw; 
-    }
-
-    async function checkCookieWithBackend(cookieString) {
-        // --- IMPORTANT ---
-        // This is pointing to your custom backend server.
-        // Replace this URL with your actual hosted Node.js backend URL.
-        const API_URL = "http://localhost:3000/api/check-netflix"; 
-
-        try {
-            const response = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ cookie: cookieString })
-            });
-            const data = await response.json();
-            return data.isLive; 
-        } catch (error) {
-            console.error("Backend unreachable", error);
-            return false; // Assumes dead if backend fails
-        }
-    }
-
-    async function initiateScan() {
-        const input = document.getElementById('cookie-data').value.trim();
-        if(!input) return alert("NO DATA DETECTED.");
-
-        const blocks = input.split(/\n\s*\n/).filter(b => b.trim().length > 10);
-        document.getElementById('val-total').innerText = blocks.length;
+        # Controls
+        self.ctrl = ctk.CTkFrame(self.main_view, fg_color="transparent")
+        self.ctrl.pack(fill="x", pady=25)
+        ctk.CTkButton(self.ctrl, text="📄 Load Cookies", command=self.load_files, fg_color="#151515", border_width=1, border_color="#333", height=40).pack(side="left", padx=5)
+        ctk.CTkButton(self.ctrl, text="📁 Load Folder", command=self.load_folder, fg_color="#151515", border_width=1, border_color="#333", height=40).pack(side="left", padx=5)
+        ctk.CTkButton(self.ctrl, text="🗑 Clear", command=self.clear_queue, fg_color="transparent", text_color="#FF4444", border_width=1, border_color="#441111", height=40).pack(side="left", padx=5)
         
-        const btn = document.getElementById('btn-start');
-        btn.disabled = true;
-        document.getElementById('status-text').innerText = "COMMUNICATING WITH BACKEND SERVER...";
+        self.stop_btn = ctk.CTkButton(self.ctrl, text="STOP", fg_color="#1A1A1A", text_color="#FF5555", hover_color="#CC2222", border_width=2, border_color="#FF4444", corner_radius=30, height=60, width=60, font=ctk.CTkFont(size=11, weight="bold"), command=self.stop_checking)
+        self.stop_btn.pack(side="right", padx=10)
+        self.stop_btn.configure(state="disabled")
 
-        for(let i=0; i < blocks.length; i++) {
-            const formattedCookie = formatForBackend(blocks[i]);
-            if(!formattedCookie) continue;
+        self.start_btn = ctk.CTkButton(self.ctrl, text="PLAY", fg_color="#1A1A1A", text_color="#00FF88", hover_color="#00CC66", border_width=2, border_color="#00FF88", corner_radius=30, height=60, width=60, font=ctk.CTkFont(size=11, weight="bold"), command=self.start_checking)
+        self.start_btn.pack(side="right", padx=5)
 
-            // Calls your actual backend to do the heavy lifting
-            const isLive = await checkCookieWithBackend(formattedCookie);
-            
-            if(isLive) hitCount++; else deadCount++;
+    def create_glass_menu_item(self, icon, title, command):
+        row = ctk.CTkFrame(self.menu_container, fg_color="#0D0D0D", corner_radius=20, border_width=1, border_color="#1F1F1F")
+        row.pack(fill="x", pady=8)
+        ctk.CTkLabel(row, text=icon, font=ctk.CTkFont(size=24)).pack(side="left", padx=(20, 15), pady=15)
+        ctk.CTkButton(row, text=title, anchor="w", fg_color="transparent", text_color="#FFFFFF", hover_color="#1A1A1A", font=ctk.CTkFont(size=14, weight="bold"), command=command).pack(side="left", fill="both", expand=True)
 
-            const tr = `<tr>
-                <td>ASSET_${Math.random().toString(36).substring(2, 8).toUpperCase()}</td>
-                <td><span class="tag ${isLive?'tag-live':'tag-dead'}">${isLive?'VALID':'EXPIRED'}</span></td>
-                <td style="color:#666">${isLive ? 'Active Session' : 'Login Required / Blocked'}</td>
-            </tr>`;
+    def create_glass_card(self, icon, label, value, col, color):
+        card = ctk.CTkFrame(self.cards_frame, fg_color="#0F0F0F", corner_radius=20, border_width=1, border_color="#222", height=150)
+        card.grid(row=0, column=col, padx=6, sticky="nsew")
+        self.cards_frame.grid_columnconfigure(col, weight=1)
+        ctk.CTkLabel(card, text=icon, font=ctk.CTkFont(size=22), text_color=color).pack(pady=(15, 2))
+        val_lbl = ctk.CTkLabel(card, text=value, font=ctk.CTkFont(size=28, weight="bold"))
+        val_lbl.pack()
+        ctk.CTkLabel(card, text=label, font=ctk.CTkFont(size=12), text_color="#555").pack(pady=(0, 15))
+        return val_lbl
 
-            document.getElementById('log-table').insertAdjacentHTML('afterbegin', tr);
-            document.getElementById('val-live').innerText = hitCount;
-            document.getElementById('val-dead').innerText = deadCount;
-            document.getElementById('progress-bar').style.width = ((i+1)/blocks.length)*100 + "%";
-        }
-        
-        document.getElementById('status-text').innerText = "SCAN COMPLETE.";
-        btn.disabled = false;
-    }
-</script>
+    # ====================== SCANNER ENGINE ======================
+    def extract_account_info(self, html_text):
+        try:
+            email = re.search(r'"email"\s*:\s*"([^"]+)"', html_text).group(1) if '"email"' in html_text else "N/A"
+            plan = re.search(r'(premium|standard|basic|ads)', html_text, re.I).group(1).title() if "plan" in html_text.lower() else "Premium"
+            return f"{email} | {plan}"
+        except: return "Valid Session"
 
-</body>
-</html>
+    def is_live_cookie(self, cookie_dict):
+        proxy = self.get_next_proxy()
+        try:
+            session = requests.Session()
+            session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"})
+            for k, v in cookie_dict.items(): session.cookies.set(k, v, domain=".netflix.com", path="/")
+            proxies_dict = {"http": proxy, "https": proxy} if proxy else None
+            resp = session.get("https://www.netflix.com/browse", timeout=12, allow_redirects=True, proxies=proxies_dict)
+            if resp.status_code != 200 or "sign in" in resp.text.lower(): return False, "Invalid"
+            return True, self.extract_account_info(resp.text)
+        except: return False, "Connection Error"
+
+    def parse_cookies(self, content):
+        cookies = {}
+        for line in content.splitlines():
+            if '\t' in line and len(line.split('\t')) >= 7:
+                p = line.split('\t')
+                cookies[p[5]] = p[6]
+        return cookies
+
+    def force_refresh_count(self):
+        files = [f for f in os.listdir(self.folders["queue"]) if f.lower().endswith(".txt")]
+        self.total = len(files)
+        self.total_lbl.configure(text=str(self.total))
+
+    def reset_all(self):
+        self.total = self.checked_count = self.alive = self.dead = 0
+        self.total_lbl.configure(text="0")
+        self.alive_lbl.configure(text="0")
+        self.dead_lbl.configure(text="0")
+        self.progress_bar.set(0)
+        self.tree.delete(*self.tree.get_children())
+        self.force_refresh_count()
+
+    def start_checking(self):
+        self.force_refresh_count()
+        if self.total == 0: return
+        self.is_running = True
+        self.alive = self.dead = self.checked_count = 0
+        self._stop_event.clear()
+        self.start_btn.configure(state="disabled")
+        self.stop_btn.configure(state="normal")
+        threading.Thread(target=self.run_checker, daemon=True).start()
+
+    def run_checker(self):
+        files = [f for f in os.listdir(self.folders["queue"]) if f.lower().endswith(".txt")]
+        for filename in files:
+            if self._stop_event.is_set(): break
+            path = os.path.join(self.folders["queue"], filename)
+            try:
+                with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+                    cookie_dict = self.parse_cookies(f.read())
+                
+                if not ("NetflixId" in cookie_dict or "SecureNetflixId" in cookie_dict):
+                    status, note = "DEAD", "No Login Key"
+                else:
+                    hit, note = self.is_live_cookie(cookie_dict)
+                    status = "ALIVE" if hit else "DEAD"
+
+                if status == "ALIVE":
+                    self.alive += 1
+                    shutil.copy2(path, os.path.join(self.folders["hits"], filename))
+                else:
+                    self.dead += 1
+                    shutil.copy2(path, os.path.join(self.folders["dead"], filename))
+
+                self.checked_count += 1
+                self.after(0, self.update_ui, filename, status, note)
+            except: pass
+        self.is_running = False
+        self.after(0, self.finish_sequence)
+
+    def update_ui(self, filename, status, note):
+        self.progress_bar.set(self.checked_count / self.total)
+        self.progress_text.configure(text=f"Progress: {self.checked_count}/{self.total}")
+        self.tree.insert("", "end", values=(filename, status, note))
+        self.alive_lbl.configure(text=str(self.alive))
+        self.dead_lbl.configure(text=str(self.dead))
+        self.tree.yview_moveto(1)
+
+    def finish_sequence(self):
+        self.start_btn.configure(state="normal")
+        self.stop_btn.configure(state="disabled")
+        messagebox.showinfo("Ananta", "Check Completed")
+
+    def stop_checking(self): self._stop_event.set()
+
+    def load_files(self):
+        files = filedialog.askopenfilenames(filetypes=[("Text files", "*.txt")])
+        for f in files: shutil.copy2(f, self.folders["queue"])
+        self.force_refresh_count()
+
+    def load_folder(self):
+        folder = filedialog.askdirectory()
+        if folder:
+            for f in os.listdir(folder):
+                if f.lower().endswith(".txt"): shutil.copy2(os.path.join(folder, f), self.folders["queue"])
+            self.force_refresh_count()
+
+    def clear_queue(self):
+        for f in os.listdir(self.folders["queue"]): os.remove(os.path.join(self.folders["queue"], f))
+        self.reset_all()
+
+    def proxy_settings(self):
+        file = filedialog.askopenfilename()
+        if file:
+            with open(file, 'r') as f: self.proxies = [l.strip() for l in f if l.strip()]
+            self.proxy_lbl.configure(text=str(len(self.proxies)))
+
+    def get_next_proxy(self):
+        if not self.proxies: return None
+        p = self.proxies[self.current_proxy_index % len(self.proxies)]
+        self.current_proxy_index += 1
+        return p
+
+    def cookies_capture(self): self.load_folder()
+
+if __name__ == "__main__":
+    app = EliteGlassChecker()
+    app.mainloop()
