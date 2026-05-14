@@ -3,241 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ananta Elite - Ultra Premium</title>
+    <title>Ananta Elite - Functional Scanner</title>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #050505;
-            --panel: rgba(15, 15, 15, 0.7);
+            --panel: rgba(15, 15, 15, 0.85);
             --accent: #E50914;
-            --accent-glow: rgba(229, 9, 20, 0.4);
-            --border: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.1);
             --green: #00FF88;
-            --glass-bright: rgba(255, 255, 255, 0.03);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body {
             background-color: var(--bg);
             color: white;
             font-family: 'Syne', sans-serif;
-            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
             overflow: hidden;
-            position: relative;
         }
 
-        /* Animated Background Glows */
-        body::before {
-            content: "";
-            position: absolute;
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-            top: -100px; left: -100px;
-            z-index: -1;
-            animation: float 15s infinite alternate;
-        }
+        .main-wrapper { width: 95%; max-width: 1100px; display: flex; gap: 20px; height: 800px; }
 
-        @keyframes float {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(100px, 100px); }
-        }
-
-        .main-wrapper {
-            width: 95%;
-            max-width: 1200px;
-            height: 850px;
-            display: flex;
-            gap: 25px;
-            z-index: 10;
-        }
-
-        /* Sidebar Upgrade */
+        /* Sidebar */
         .sidebar {
-            width: 350px;
-            background: var(--panel);
-            backdrop-filter: blur(30px);
-            border: 1px solid var(--border);
-            border-radius: 35px;
-            padding: 50px 30px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+            width: 300px; background: var(--panel); backdrop-filter: blur(20px);
+            border-radius: 30px; border: 1px solid var(--border); padding: 40px 20px;
+            display: flex; flex-direction: column; align-items: center;
         }
+        .logo { border: 2px solid var(--accent); border-radius: 20px; padding: 20px; margin-bottom: 30px; text-align: center; }
+        .logo h1 { font-size: 2rem; color: white; }
 
-        .logo-section {
-            border: 2px solid var(--accent);
-            border-radius: 30px;
-            padding: 30px 10px;
-            text-align: center;
-            box-shadow: inset 0 0 20px var(--accent-glow), 0 0 20px var(--accent-glow);
-            margin-bottom: 40px;
-        }
-
-        .logo-section h2 { font-size: 0.8rem; text-transform: uppercase; color: #888; letter-spacing: 3px; }
-        .logo-section h1 { font-size: 3rem; color: white; letter-spacing: -2px; }
-
-        .nav-item {
-            padding: 18px 25px;
-            border-radius: 15px;
-            margin-bottom: 10px;
-            background: var(--glass-bright);
-            border: 1px solid transparent;
-            cursor: pointer;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: #aaa;
-        }
-
-        .nav-item:hover {
-            border-color: var(--accent);
-            color: white;
-            background: rgba(229, 9, 20, 0.05);
-            transform: translateX(5px);
-        }
-
-        /* Content Area */
+        /* Main Content */
         .content { flex: 1; display: flex; flex-direction: column; gap: 20px; }
 
-        /* Stats with Glass Depth */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .stat-card {
-            background: var(--panel);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 25px;
-            padding: 30px;
-            position: relative;
-            overflow: hidden;
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .stat-card { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 20px; text-align: center; }
+        .stat-card p { font-size: 2rem; font-family: 'JetBrains Mono'; }
+
+        .glass-panel { background: var(--panel); border-radius: 25px; border: 1px solid var(--border); padding: 25px; flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+        textarea { 
+            width: 100%; height: 120px; background: #000; border: 1px solid var(--border); 
+            border-radius: 15px; padding: 15px; color: var(--green); font-family: 'JetBrains Mono'; 
+            margin-bottom: 15px; outline: none;
         }
 
-        .stat-card::after {
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-            background: var(--accent);
-        }
-
-        .stat-card.hits::after { background: var(--green); }
-
-        .stat-card h4 { color: #555; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-card p { font-size: 2.5rem; font-family: 'JetBrains Mono'; margin-top: 5px; }
-
-        /* Table & Input Area */
-        .glass-panel {
-            background: var(--panel);
-            backdrop-filter: blur(40px);
-            border: 1px solid var(--border);
-            border-radius: 30px;
-            padding: 25px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        }
-
-        textarea {
-            width: 100%; height: 150px;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 20px;
-            color: var(--green);
-            font-family: 'JetBrains Mono';
-            margin-bottom: 20px;
-            outline: none;
-            resize: none;
-        }
-
-        /* Custom Play Button */
         .play-btn {
-            width: 80px; height: 80px;
-            background: var(--bg);
-            border: 2px solid var(--green);
-            border-radius: 50%;
-            color: var(--green);
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: 0.4s;
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
-            display: flex; align-items: center; justify-content: center;
-            margin-left: auto;
+            width: 60px; height: 60px; background: transparent; border: 2px solid var(--green);
+            color: var(--green); border-radius: 50%; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; margin-left: auto;
         }
+        .play-btn:hover { background: var(--green); color: black; box-shadow: 0 0 20px var(--green); }
 
-        .play-btn:hover {
-            background: var(--green);
-            color: black;
-            box-shadow: 0 0 30px var(--green);
-            transform: scale(1.1) rotate(360deg);
-        }
-
-        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; color: #444; font-size: 0.75rem; text-transform: uppercase; }
-        td { padding: 15px; font-family: 'JetBrains Mono'; font-size: 0.85rem; border-top: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: left; color: #444; font-size: 0.7rem; padding-bottom: 10px; }
+        td { padding: 10px; border-top: 1px solid var(--border); font-family: 'JetBrains Mono'; font-size: 0.8rem; }
         
-        .badge { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; }
-        .badge-live { background: rgba(0, 255, 136, 0.1); color: var(--green); }
-        .badge-dead { background: rgba(229, 9, 20, 0.1); color: var(--accent); }
-
+        .status-live { color: var(--green); font-weight: bold; }
+        .status-dead { color: var(--accent); }
     </style>
 </head>
 <body>
 
 <div class="main-wrapper">
     <div class="sidebar">
-        <div class="logo-section">
-            <h2>Powered By</h2>
-            <h1>ANANTA</h1>
+        <div class="logo">
+            <h2 style="font-size: 0.7rem; color: #666;">ANANTA</h2>
+            <h1>ELITE</h1>
         </div>
-        
-        <div class="nav-item"><span>✈️</span> Telegram Channel</div>
-        <div class="nav-item"><span>🌐</span> Proxy Settings</div>
-        <div class="nav-item"><span>🛠</span> Tool Configuration</div>
-        <div class="nav-item"><span>📧</span> Support Email</div>
-
-        <div style="margin-top: auto; text-align: center; color: #333; font-size: 0.7rem; font-family: 'JetBrains Mono';">
-            BUILD: 4.2.5_ULTRA_GLASS
-        </div>
+        <p style="color: #444; font-size: 0.8rem;">REAL-TIME VALIDATOR</p>
     </div>
 
     <div class="content">
         <div class="stats-grid">
-            <div class="stat-card">
-                <h4>Total Queue</h4>
-                <p id="total">0</p>
-            </div>
-            <div class="stat-card hits">
-                <h4>Live Hits</h4>
-                <p id="hits">0</p>
-            </div>
-            <div class="stat-card dead">
-                <h4>Dead Files</h4>
-                <p id="dead">0</p>
-            </div>
+            <div class="stat-card"><h4>Total</h4><p id="total">0</p></div>
+            <div class="stat-card"><h4 style="color:var(--green)">Live</h4><p id="hits">0</p></div>
+            <div class="stat-card"><h4 style="color:var(--accent)">Dead</h4><p id="dead">0</p></div>
         </div>
 
         <div class="glass-panel">
-            <textarea id="input" placeholder="Drop your cookie list here..."></textarea>
-            
+            <textarea id="cookie-input" placeholder="Paste Netflix Cookies (Netscape or JSON format)..."></textarea>
             <div style="display: flex; align-items: center;">
-                <div style="flex: 1;">
-                    <div style="color: #666; font-size: 0.8rem; margin-bottom: 5px;">SCANNER PROGRESS</div>
-                    <div style="background: #000; height: 6px; border-radius: 3px; width: 80%; overflow: hidden;">
-                        <div id="bar" style="background: var(--accent); width: 0%; height: 100%; transition: 0.3s;"></div>
-                    </div>
-                </div>
-                <button class="play-btn" onclick="runScan()">▶</button>
+                <span id="status-label" style="color:#666; font-size: 0.8rem;">READY TO SCAN</span>
+                <button class="play-btn" onclick="startValidation()">▶</button>
             </div>
 
-            <div style="overflow-y: auto; flex: 1; margin-top: 20px;">
+            <div style="overflow-y: auto; flex: 1; margin-top: 15px;">
                 <table>
-                    <thead>
-                        <tr><th>Data Source</th><th>Status</th><th>Response</th></tr>
-                    </thead>
-                    <tbody id="logs"></tbody>
+                    <thead><tr><th>Source</th><th>Status</th><th>Note</th></tr></thead>
+                    <tbody id="log-body"></tbody>
                 </table>
             </div>
         </div>
@@ -245,30 +102,62 @@
 </div>
 
 <script>
-    let h = 0, d = 0;
-    async function runScan() {
-        const val = document.getElementById('input').value.trim();
-        if(!val) return;
-        const lines = val.split('\n');
-        document.getElementById('total').innerText = lines.length;
-        
-        for(let i=0; i<lines.length; i++) {
-            const isHit = Math.random() > 0.7;
-            if(isHit) h++; else d++;
-            
-            const row = `<tr>
-                <td>Session_ID_${Math.floor(Math.random()*9999)}</td>
-                <td><span class="badge ${isHit?'badge-live':'badge-dead'}">${isHit?'ALIVE':'DEAD'}</span></td>
-                <td style="color:#555">${isHit?'Premium 4K':'Expired Account'}</td>
-            </tr>`;
-            
-            document.getElementById('logs').insertAdjacentHTML('afterbegin', row);
-            document.getElementById('hits').innerText = h;
-            document.getElementById('dead').innerText = d;
-            document.getElementById('bar').style.width = ((i+1)/lines.length)*100 + "%";
-            
-            await new Promise(r => setTimeout(r, 150));
+    let hits = 0, dead = 0;
+
+    async function checkNetflixCookie(cookieString) {
+        // We use a public CORS proxy to allow the browser to talk to Netflix
+        const proxyUrl = "https://cors-anywhere.herokuapp.com/"; 
+        const targetUrl = "https://www.netflix.com/YourAccount";
+
+        try {
+            const response = await fetch(proxyUrl + targetUrl, {
+                method: 'GET',
+                headers: {
+                    'Cookie': cookieString,
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0.4472.124 Safari/537.36'
+                }
+            });
+
+            // If the cookie is live, Netflix redirects to the account page or returns 200
+            // If it's dead, it usually redirects to the login page
+            const finalUrl = response.url;
+            if (response.ok && !finalUrl.includes('login')) {
+                return { live: true, note: "Premium Active" };
+            } else {
+                return { live: false, note: "Expired/Invalid" };
+            }
+        } catch (err) {
+            return { live: false, note: "Proxy/Network Error" };
         }
+    }
+
+    async function startValidation() {
+        const input = document.getElementById('cookie-input').value.trim();
+        if (!input) return alert("Please paste cookies!");
+
+        const lines = input.split('\n').filter(l => l.length > 10);
+        document.getElementById('total').innerText = lines.length;
+        document.getElementById('status-label').innerText = "SCANNING...";
+
+        for (let i = 0; i < lines.length; i++) {
+            const result = await checkNetflixCookie(lines[i]);
+            
+            if (result.live) hits++; else dead++;
+
+            const row = `<tr>
+                <td>Cookie_Asset_${i+1}</td>
+                <td class="${result.live ? 'status-live' : 'status-dead'}">${result.live ? 'LIVE' : 'DEAD'}</td>
+                <td>${result.note}</td>
+            </tr>`;
+
+            document.getElementById('log-body').insertAdjacentHTML('afterbegin', row);
+            document.getElementById('hits').innerText = hits;
+            document.getElementById('dead').innerText = dead;
+            
+            // Artificial delay to prevent proxy rate-limiting
+            await new Promise(r => setTimeout(r, 800));
+        }
+        document.getElementById('status-label').innerText = "FINISHED";
     }
 </script>
 
