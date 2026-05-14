@@ -1,219 +1,909 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ananta Elite | Professional Session Validator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #030303;
-            --glass: rgba(18, 18, 18, 0.75);
-            --accent: #E50914;
-            --accent-glow: rgba(229, 9, 20, 0.4);
-            --border: rgba(255, 255, 255, 0.05);
-            --green: #00FF88;
-            --green-glow: rgba(0, 255, 136, 0.3);
-            --text-dim: #555;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Netflix Cookie Inspector</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080808;
+  --s1: #0f0f0f;
+  --s2: #141414;
+  --s3: #1a1a1a;
+  --border: #222;
+  --border2: #2a2a2a;
+  --red: #e50914;
+  --red2: #ff2d38;
+  --green: #00e676;
+  --yellow: #ffea00;
+  --blue: #448aff;
+  --text: #f2f2f2;
+  --muted: #666;
+  --muted2: #444;
+  --font: 'Syne', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background-color: var(--bg);
-            background-image: radial-gradient(circle at 20% 20%, #1a0505 0%, transparent 40%),
-                              radial-gradient(circle at 80% 80%, #0a0a1a 0%, transparent 40%);
-            color: white; font-family: 'Syne', sans-serif;
-            height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden;
-        }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .main-wrapper { width: 95%; max-width: 1300px; height: 850px; display: flex; gap: 30px; z-index: 10; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  padding: 0;
+  overflow-x: hidden;
+}
 
-        /* Sidebar UI */
-        .sidebar {
-            width: 350px; background: var(--glass); backdrop-filter: blur(40px);
-            border: 1px solid var(--border); border-radius: 40px; padding: 50px 35px;
-            display: flex; flex-direction: column; box-shadow: 0 40px 100px rgba(0,0,0,0.8);
-        }
-        .brand-box {
-            padding: 35px 20px; text-align: center; border-radius: 30px;
-            border: 1px solid var(--border); margin-bottom: 40px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.02), transparent);
-        }
-        .brand-box h2 { font-size: 0.7rem; color: var(--text-dim); letter-spacing: 5px; text-transform: uppercase; }
-        .brand-box h1 { font-size: 3rem; letter-spacing: -2px; text-shadow: 0 0 20px var(--accent-glow); }
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(229,9,20,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(229,9,20,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
 
-        .nav-link {
-            padding: 18px 25px; border-radius: 20px; margin-bottom: 10px;
-            color: #777; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.3s;
-        }
-        .nav-link:hover { background: rgba(255,255,255,0.03); color: white; transform: translateX(8px); }
+.glow-orb {
+  position: fixed;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(229,9,20,0.12) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
 
-        /* Main Panel */
-        .content { flex: 1; display: flex; flex-direction: column; gap: 25px; }
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+}
 
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .stat-card { background: var(--glass); border: 1px solid var(--border); border-radius: 30px; padding: 30px; text-align: center; transition: 0.3s; }
-        .stat-card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.1); }
-        .stat-card span { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; font-weight: 800; }
-        .stat-card p { font-size: 2.8rem; font-family: 'JetBrains Mono'; margin-top: 5px; }
-        .hit p { color: var(--green); text-shadow: 0 0 15px var(--green-glow); }
-        .dead p { color: var(--accent); text-shadow: 0 0 15px var(--accent-glow); }
+header {
+  margin-bottom: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
 
-        /* Console */
-        .console {
-            background: var(--glass); border: 1px solid var(--border); border-radius: 35px;
-            padding: 25px; flex: 1; display: flex; flex-direction: column;
-        }
-        textarea {
-            width: 100%; height: 160px; background: rgba(0,0,0,0.5); border: 1px solid var(--border);
-            border-radius: 25px; padding: 20px; color: var(--green); font-family: 'JetBrains Mono';
-            margin-bottom: 20px; outline: none; resize: none; transition: 0.3s;
-        }
-        textarea:focus { border-color: var(--accent); }
+.logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
 
-        .action-bar { display: flex; align-items: center; background: rgba(0,0,0,0.3); padding: 15px 25px; border-radius: 25px; border: 1px solid var(--border); }
-        .progress-info { flex: 1; }
-        .bar-bg { background: #111; height: 8px; border-radius: 4px; width: 90%; margin-top: 8px; overflow: hidden; }
-        .bar-fill { background: var(--accent); width: 0%; height: 100%; transition: 0.4s; box-shadow: 0 0 10px var(--accent); }
+.logo-n {
+  font-size: 52px;
+  font-weight: 800;
+  color: var(--red);
+  line-height: 1;
+  text-shadow: 0 0 30px rgba(229,9,20,0.5);
+  letter-spacing: -2px;
+}
 
-        .run-btn {
-            width: 75px; height: 75px; background: #000; border: 2px solid var(--green);
-            border-radius: 50%; color: var(--green); font-size: 1.5rem; cursor: pointer;
-            transition: 0.4s; display: flex; align-items: center; justify-content: center;
-        }
-        .run-btn:hover { background: var(--green); color: black; box-shadow: 0 0 30px var(--green); transform: scale(1.1) rotate(360deg); }
+.logo-text {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--text);
+  line-height: 1.4;
+}
 
-        /* Table */
-        .log-view { flex: 1; margin-top: 25px; overflow-y: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        th { text-align: left; padding: 0 15px; color: #444; font-size: 0.7rem; text-transform: uppercase; }
-        td { padding: 15px; background: rgba(255,255,255,0.02); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono'; font-size: 0.8rem; }
-        td:first-child { border-left: 1px solid var(--border); border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
-        td:last-child { border-right: 1px solid var(--border); border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+.logo-text small {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  color: var(--muted);
+  font-weight: 400;
+  margin-top: 2px;
+}
 
-        .pill { padding: 4px 12px; border-radius: 8px; font-size: 0.65rem; font-weight: 800; }
-        .pill-live { background: rgba(0, 255, 136, 0.1); color: var(--green); border: 1px solid rgba(0, 255, 136, 0.2); }
-        .pill-dead { background: rgba(229, 9, 20, 0.1); color: var(--accent); border: 1px solid rgba(229, 9, 20, 0.2); }
-    </style>
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--s1);
+  margin-top: 16px;
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: blink 2s infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.tab.active {
+  background: var(--s3);
+  color: var(--text);
+  border: 1px solid var(--border2);
+}
+
+.tab:hover:not(.active) { color: var(--text); }
+
+.panel {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.panel-head {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.panel-head-left { display: flex; align-items: center; gap: 8px; }
+
+.badge {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.badge-red { background: rgba(229,9,20,0.15); color: var(--red); border: 1px solid rgba(229,9,20,0.3); }
+.badge-green { background: rgba(0,230,118,0.1); color: var(--green); border: 1px solid rgba(0,230,118,0.25); }
+.badge-yellow { background: rgba(255,234,0,0.08); color: var(--yellow); border: 1px solid rgba(255,234,0,0.2); }
+.badge-blue { background: rgba(68,138,255,0.1); color: var(--blue); border: 1px solid rgba(68,138,255,0.25); }
+.badge-muted { background: var(--s2); color: var(--muted); border: 1px solid var(--border); }
+
+.panel-body { padding: 20px; }
+
+textarea {
+  width: 100%;
+  height: 200px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  padding: 16px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+}
+
+textarea:focus { border-color: rgba(229,9,20,0.5); }
+textarea::placeholder { color: #282828; }
+
+.format-hints {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.fmt-pill {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.fmt-pill:hover { border-color: var(--red); color: var(--red2); }
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 13px 20px;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: var(--red);
+  color: #fff;
+  flex: 1;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.btn-primary:hover { background: var(--red2); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(229,9,20,0.3); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-secondary {
+  background: var(--s2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover { color: var(--text); border-color: var(--border2); }
+
+.btn-icon {
+  background: var(--s2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 13px 14px;
+}
+.btn-icon:hover { color: var(--text); border-color: var(--border2); }
+
+.loading-bar {
+  display: none;
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.loading-bar.visible { display: block; }
+
+.loading-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--red), var(--red2));
+  border-radius: 1px;
+  animation: loadfill 0.7s ease forwards;
+}
+
+@keyframes loadfill { from { width: 0; } to { width: 100%; } }
+
+.loading-text {
+  display: none;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 8px;
+  animation: fadepulse 0.8s infinite alternate;
+}
+
+.loading-text.visible { display: block; }
+@keyframes fadepulse { from { opacity: 0.4; } to { opacity: 1; } }
+
+.results { display: none; animation: slideUp 0.35s ease; }
+.results.visible { display: block; }
+
+@keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+}
+
+.result-header.valid { background: rgba(0,230,118,0.05); border-color: rgba(0,230,118,0.2); }
+.result-header.invalid { background: rgba(229,9,20,0.06); border-color: rgba(229,9,20,0.2); }
+.result-header.warning { background: rgba(255,234,0,0.04); border-color: rgba(255,234,0,0.15); }
+
+.result-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.result-icon-big {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.valid .result-icon-big { background: rgba(0,230,118,0.1); border: 1px solid rgba(0,230,118,0.3); }
+.invalid .result-icon-big { background: rgba(229,9,20,0.1); border: 1px solid rgba(229,9,20,0.3); }
+.warning .result-icon-big { background: rgba(255,234,0,0.08); border: 1px solid rgba(255,234,0,0.25); }
+
+.result-headline {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.valid .result-headline { color: var(--green); }
+.invalid .result-headline { color: var(--red2); }
+.warning .result-headline { color: var(--yellow); }
+
+.result-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+
+.result-actions { display: flex; gap: 8px; }
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-bottom: none;
+}
+
+.stat-box {
+  background: var(--s1);
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-val {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.details-panel {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+}
+
+.details-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--s2);
+}
+
+.dtab {
+  padding: 10px 18px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.dtab.active { color: var(--text); border-bottom-color: var(--red); }
+.dtab:hover:not(.active) { color: var(--text); }
+
+.dtab-content { display: none; }
+.dtab-content.active { display: block; }
+
+.keys-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.keys-table th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  background: var(--s2);
+  font-weight: 400;
+}
+
+.keys-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: #ccc;
+}
+
+.keys-table tr:last-child td { border-bottom: none; }
+.keys-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.key-name { color: var(--text); font-weight: 500; }
+.key-val { color: var(--muted); max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.key-val:hover { white-space: normal; word-break: break-all; }
+
+.raw-box {
+  padding: 16px;
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px;
+}
+
+.summary-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 14px;
+}
+
+.summary-key {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.summary-val {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.summary-val.ok { color: var(--green); }
+.summary-val.bad { color: var(--red2); }
+.summary-val.warn { color: var(--yellow); }
+
+.toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 12px 18px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  letter-spacing: 0.08em;
+  z-index: 1000;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.2s;
+  pointer-events: none;
+}
+
+.toast.show { transform: translateY(0); opacity: 1; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--s1); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+@media (max-width: 560px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .summary-grid { grid-template-columns: 1fr; }
+  .result-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+}
+</style>
 </head>
 <body>
 
-<div class="main-wrapper">
-    <div class="sidebar">
-        <div class="brand-box">
-            <h2>Powered By</h2>
-            <h1>ANANTA</h1>
+<div class="glow-orb"></div>
+
+<div class="container">
+  <header>
+    <div class="logo-wrap">
+      <div class="logo-n">N</div>
+      <div class="logo-text">
+        Cookie Inspector
+        <small>Session Validator — Local Only</small>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      Offline · No data transmitted · 100% local
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('single')">Single Cookie</div>
+    <div class="tab" onclick="switchTab('bulk')">Bulk Check</div>
+  </div>
+
+  <div id="tab-single">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <span>Cookie Input</span>
+          <span class="badge badge-muted" id="format-detected">Format: —</span>
         </div>
-        <div class="nav-link" onclick="window.open('https://t.me/anantaabid')"><span>✈️</span> Telegram Channel</div>
-        <div class="nav-link"><span>🌐</span> Proxy Status: <span style="color:var(--green); margin-left:5px;">Active</span></div>
-        <div class="nav-link"><span>🛠</span> Conversion Engine</div>
-        
-        <div style="margin-top: auto; text-align: center; opacity: 0.3; font-size: 0.6rem; font-family: 'JetBrains Mono';">
-            ANANTA_V4.5_STABLE
+        <span style="font-size:9px">Ctrl+Enter to check</span>
+      </div>
+      <div class="panel-body">
+        <textarea id="cookieInput" placeholder="Paste your Netflix cookie string here..."></textarea>
+
+        <div class="format-hints">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em;align-self:center">EXAMPLES →</span>
+          <span class="fmt-pill" onclick="loadExample('header')">Header String</span>
+          <span class="fmt-pill" onclick="loadExample('json')">JSON Array</span>
+          <span class="fmt-pill" onclick="loadExample('netscape')">Netscape</span>
+          <span class="fmt-pill" onclick="loadExample('lines')">Line-by-line</span>
         </div>
+
+        <div id="dropZone" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)" onclick="document.getElementById('fileInput').click()" style="margin-top:14px;border:1px dashed var(--border2);border-radius:4px;padding:14px 20px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all 0.15s;background:var(--bg);">
+          <span style="font-size:18px">📂</span>
+          <div>
+            <div style="font-family:var(--mono);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Drop file or click to browse</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--muted2);margin-top:3px">.txt · .json · .har</div>
+          </div>
+          <span id="fileLabel" style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em"></span>
+        </div>
+        <input type="file" id="fileInput" accept=".txt,.json,.har" style="display:none" onchange="loadFile(this)">
+
+        <div class="actions">
+          <button class="btn btn-primary" id="checkBtn" onclick="runCheck()">
+            <span>▶</span> Analyse Cookie
+          </button>
+          <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
+          <button class="btn btn-icon" title="Paste from clipboard" onclick="pasteClip()">📋</button>
+        </div>
+      </div>
     </div>
 
-    <div class="content">
-        <div class="stats-grid">
-            <div class="stat-card"><span>Total Queue</span><p id="t-val">0</p></div>
-            <div class="stat-card hit"><span>Live Sessions</span><p id="l-val">0</p></div>
-            <div class="stat-card dead"><span>Dead Sessions</span><p id="d-val">0</p></div>
-        </div>
+    <div class="loading-bar" id="loadBar"><div class="loading-fill"></div></div>
+    <div class="loading-text" id="loadText">Parsing cookie data...</div>
+  </div>
 
-        <div class="console">
-            <textarea id="cookie-input" placeholder="Paste Netscape or JSON Cookies here..."></textarea>
-            
-            <div class="action-bar">
-                <div class="progress-info">
-                    <span id="status-label" style="color:#666; font-size: 0.75rem;">SYSTEM STANDBY</span>
-                    <div class="bar-bg"><div class="bar-fill" id="p-bar"></div></div>
-                </div>
-                <button class="run-btn" id="start-btn" onclick="runEliteScanner()">▶</button>
-            </div>
-
-            <div class="log-view">
-                <table>
-                    <thead><tr><th>Reference</th><th>Status</th><th>Note</th></tr></thead>
-                    <tbody id="rows"></tbody>
-                </table>
-            </div>
+  <div id="tab-bulk" style="display:none">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <span>Bulk Input</span>
+          <span class="badge badge-muted">One cookie per line</span>
         </div>
+      </div>
+      <div class="panel-body">
+        <textarea id="bulkInput" style="height:180px" placeholder="Paste multiple cookies, one per line..."></textarea>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="runBulk()"><span>▶</span> Check All</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('bulkInput').value=''; document.getElementById('bulkResults').innerHTML=''">Clear</button>
+        </div>
+      </div>
     </div>
+    <div id="bulkResults" style="margin-top:16px;display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+
+  <div class="results" id="results" style="margin-top:16px">
+    <div class="result-header" id="resultHeader">
+      <div class="result-status">
+        <div class="result-icon-big" id="resultIconBig"></div>
+        <div>
+          <div class="result-headline" id="resultHeadline"></div>
+          <div class="result-sub" id="resultSub"></div>
+        </div>
+      </div>
+      <div class="result-actions">
+        <button class="btn btn-icon" title="Copy result" onclick="copyResult()">📄 Copy</button>
+        <button class="btn btn-icon" title="Export JSON" onclick="exportJSON()">⬇ JSON</button>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val" id="statTotal">—</div><div class="stat-label">Total Keys</div></div>
+      <div class="stat-box"><div class="stat-val" id="statSession">—</div><div class="stat-label">Session Keys</div></div>
+      <div class="stat-box"><div class="stat-val" id="statFormat">—</div><div class="stat-label">Format</div></div>
+      <div class="stat-box"><div class="stat-val" id="statExpiry">—</div><div class="stat-label">Expiry</div></div>
+    </div>
+
+    <div class="details-panel">
+      <div class="details-tabs">
+        <div class="dtab active" onclick="switchDTab('summary')">Summary</div>
+        <div class="dtab" onclick="switchDTab('keys')">All Keys</div>
+        <div class="dtab" onclick="switchDTab('raw')">Raw Output</div>
+      </div>
+      <div class="dtab-content active" id="dtab-summary"><div class="summary-grid" id="summaryGrid"></div></div>
+      <div class="dtab-content" id="dtab-keys">
+        <table class="keys-table">
+          <thead><tr><th>Key Name</th><th>Value (truncated)</th><th>Status</th><th>Expiry</th></tr></thead>
+          <tbody id="keysBody"></tbody>
+        </table>
+      </div>
+      <div class="dtab-content" id="dtab-raw"><div class="raw-box" id="rawBox"></div></div>
+    </div>
+  </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-    let hitCount = 0, deadCount = 0;
+const REQUIRED = ['NetflixId', 'SecureNetflixId'];
+const SESSION  = ['NetflixId', 'SecureNetflixId', 'nfvdid', 'memclid'];
+const HELPFUL  = ['membershipStatus','profilesNewSession','nfvdid','clSharedContext','lhpuuidhasset','memclid','flwssn'];
 
-    // CORE: Convert ANY format to browser-usable header
-    function parseToHeader(raw) {
-        raw = raw.trim();
-        // Handle JSON
-        if (raw.startsWith('[') && raw.endsWith(']')) {
-            try {
-                const j = JSON.parse(raw);
-                return j.map(c => `${c.name}=${c.value}`).join('; ');
-            } catch(e) { return null; }
-        }
-        // Handle Netscape (Tab-separated)
-        if (raw.includes('\t')) {
-            return raw.split('\n').filter(l => l.trim() && !l.startsWith('#'))
-                .map(l => {
-                    const p = l.split('\t');
-                    return p.length >= 7 ? `${p[5].trim()}=${p[6].trim()}` : null;
-                }).filter(x => x).join('; ');
-        }
-        return raw; // Already Header format
-    }
+let lastResult = null;
 
-    async function validateSession(cookieHeader) {
-        const proxy = "https://corsproxy.io/?"; 
-        const endpoint = "https://www.netflix.com/api/shakti/v8e2c07d3/pathEvaluator";
-        
-        try {
-            const res = await fetch(proxy + encodeURIComponent(endpoint), {
-                method: "GET",
-                headers: { "Cookie": cookieHeader }
-            });
-            // If the cookie is dead, Netflix redirects or returns 401
-            return res.ok && res.status !== 401;
-        } catch(e) { return false; }
-    }
+function detectFormat(raw) {
+  raw = raw.trim();
+  let fmt = '—';
+  if (!raw) { }
+  else if (raw.startsWith('[')) fmt = 'JSON Array';
+  else if (raw.startsWith('{')) fmt = 'JSON Object';
+  else if (raw.includes('\t') && raw.includes('.netflix.com')) fmt = 'Netscape';
+  else if (raw.includes('=') && raw.includes(';')) fmt = 'Header String';
+  else if (raw.includes('=') && raw.includes('\n')) fmt = 'Line-by-line';
+  document.getElementById('format-detected').textContent = 'Format: ' + fmt;
+}
 
-    async function runEliteScanner() {
-        const input = document.getElementById('cookie-input').value.trim();
-        if(!input) return alert("Please paste cookies first.");
+function parseCookies(raw) {
+  raw = raw.trim();
+  const cookies = {};
+  let format = 'unknown';
 
-        // Split by blocks (empty lines)
-        const blocks = input.split(/\n\s*\n/).filter(b => b.trim().length > 10);
-        document.getElementById('t-val').innerText = blocks.length;
-        document.getElementById('start-btn').disabled = true;
-        document.getElementById('status-label').innerText = "SCANNING ENCRYPTED DATA...";
+  if (raw.startsWith('[')) {
+    try {
+      const arr = JSON.parse(raw);
+      format = 'JSON Array';
+      arr.forEach(c => {
+        if (c.name) cookies[c.name] = { value: c.value || '', expiry: c.expirationDate || c.expires || null };
+      });
+      return { cookies, format };
+    } catch(e) {}
+  }
 
-        for(let i=0; i < blocks.length; i++) {
-            const headerStr = parseToHeader(blocks[i]);
-            if(!headerStr) continue;
+  if (raw.startsWith('{')) {
+    try {
+      const obj = JSON.parse(raw);
+      format = 'JSON Object';
+      Object.entries(obj).forEach(([k, v]) => {
+        cookies[k] = { value: typeof v === 'object' ? (v.value || '') : String(v), expiry: null };
+      });
+      return { cookies, format };
+    } catch(e) {}
+  }
 
-            const isLive = await validateSession(headerStr);
-            
-            if(isLive) hitCount++; else deadCount++;
+  if (raw.includes('\t')) {
+    const lines = raw.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+    lines.forEach(line => {
+      const parts = line.split('\t');
+      if (parts.length >= 7) {
+        cookies[parts[5].trim()] = { value: parts[6].trim(), expiry: parseInt(parts[4]) };
+      }
+    });
+    if (Object.keys(cookies).length > 0) return { cookies, format: 'Netscape' };
+  }
 
-            const log = `<tr>
-                <td>Asset_ID_${Math.floor(Math.random()*9000)+1000}</td>
-                <td><span class="pill ${isLive?'pill-live':'pill-dead'}">${isLive?'ALIVE':'DEAD'}</span></td>
-                <td style="color:#444">${isLive?'Premium Plan Checked':'Session Expired'}</td>
-            </tr>`;
+  if (raw.includes(';') && !raw.includes('\n')) {
+    format = 'Header String';
+    raw.split(';').forEach(pair => {
+      const idx = pair.indexOf('=');
+      if (idx > 0) cookies[pair.slice(0, idx).trim()] = { value: pair.slice(idx + 1).trim(), expiry: null };
+    });
+    return { cookies, format };
+  }
 
-            document.getElementById('rows').insertAdjacentHTML('afterbegin', log);
-            document.getElementById('l-val').innerText = hitCount;
-            document.getElementById('d-val').innerText = deadCount;
-            document.getElementById('p-bar').style.width = ((i+1)/blocks.length)*100 + "%";
+  format = 'Line-by-line';
+  raw.split('\n').forEach(line => {
+    const idx = line.indexOf('=');
+    if (idx > 0) cookies[line.slice(0, idx).trim()] = { value: line.slice(idx + 1).trim(), expiry: null };
+  });
 
-            await new Promise(r => setTimeout(r, 1000)); // Delay to bypass rate-limits
-        }
-        document.getElementById('status-label').innerText = "SCAN COMPLETE";
-        document.getElementById('start-btn').disabled = false;
-    }
+  return { cookies, format };
+}
+
+function checkExpiry(expiry) {
+  if (!expiry) return null;
+  let ts = typeof expiry === 'number' ? expiry * 1000 : Date.parse(expiry);
+  if (isNaN(ts)) return null;
+  const diff = ts - Date.now();
+  if (diff < 0) return { expired: true, label: 'Expired' };
+  const days = Math.floor(diff / 86400000);
+  return { expired: false, label: days > 0 ? days + 'd remaining' : 'Expires soon' };
+}
+
+function runCheck() {
+  const raw = document.getElementById('cookieInput').value;
+  if (!raw.trim()) { showToast('Paste a cookie first!'); return; }
+  document.getElementById('loadBar').classList.add('visible');
+  document.getElementById('loadText').classList.add('visible');
+  document.getElementById('results').classList.remove('visible');
+  setTimeout(() => {
+    document.getElementById('loadBar').classList.remove('visible');
+    document.getElementById('loadText').classList.remove('visible');
+    analyse(raw);
+  }, 500);
+}
+
+function analyse(raw) {
+  const { cookies, format } = parseCookies(raw);
+  const keys = Object.keys(cookies);
+  if (keys.length === 0) { renderResult({ status: 'invalid', headline: 'No Keys Found' }); return; }
+
+  const missingReq = REQUIRED.filter(k => !cookies[k]);
+  const sessionCount = SESSION.filter(k => cookies[k]).length;
+  let anyExpired = false, expiryLabel = 'No timestamps';
+  
+  SESSION.forEach(k => {
+    const exp = cookies[k] ? checkExpiry(cookies[k].expiry) : null;
+    if (exp && exp.expired) anyExpired = true;
+    if (exp && !anyExpired) expiryLabel = exp.label;
+  });
+
+  const confidence = sessionCount >= 3 ? 'High' : sessionCount >= 2 ? 'Medium' : 'Low';
+  const summaryItems = [
+    { key: 'NetflixId', val: cookies['NetflixId'] ? '✓ Present' : '✗ Missing', state: cookies['NetflixId'] ? 'ok' : 'bad' },
+    { key: 'SecureNetflixId', val: cookies['SecureNetflixId'] ? '✓ Present' : '✗ Missing', state: cookies['SecureNetflixId'] ? 'ok' : 'bad' },
+    { key: 'Total Keys', val: keys.length, state: '' },
+    { key: 'Confidence', val: confidence, state: confidence === 'High' ? 'ok' : 'warn' }
+  ];
+
+  const allKeys = keys.map(k => ({
+    name: k,
+    value: cookies[k].value,
+    status: REQUIRED.includes(k) ? 'required' : HELPFUL.includes(k) ? 'session' : 'other',
+    expiry: cookies[k].expiry ? 'Available' : '—'
+  }));
+
+  const result = {
+    status: (missingReq.length === 0 && !anyExpired) ? 'valid' : 'invalid',
+    headline: anyExpired ? 'Expired' : (missingReq.length === 0 ? 'Valid' : 'Invalid'),
+    sub: missingReq.length > 0 ? 'Missing: ' + missingReq.join(', ') : 'Required keys present',
+    keys: keys.length, sessionKeys: sessionCount, format, expiryLabel, summaryItems, allKeys, raw
+  };
+  lastResult = result;
+  renderResult(result);
+}
+
+function renderResult(r) {
+  document.getElementById('resultHeader').className = 'result-header ' + r.status;
+  document.getElementById('resultIconBig').textContent = r.status === 'valid' ? '✓' : '✕';
+  document.getElementById('resultHeadline').textContent = r.headline;
+  document.getElementById('resultSub').textContent = r.sub;
+  document.getElementById('statTotal').textContent = r.keys;
+  document.getElementById('statSession').textContent = r.sessionKeys + '/4';
+  document.getElementById('statFormat').textContent = r.format;
+  document.getElementById('statExpiry').textContent = r.expiryLabel;
+
+  const sg = document.getElementById('summaryGrid'); sg.innerHTML = '';
+  r.summaryItems.forEach(i => sg.innerHTML += `<div class="summary-item"><div class="summary-key">${i.key}</div><div class="summary-val ${i.state}">${i.val}</div></div>`);
+
+  const kb = document.getElementById('keysBody'); kb.innerHTML = '';
+  r.allKeys.forEach(k => kb.innerHTML += `<tr><td class="key-name">${k.name}</td><td class="key-val">${k.value.slice(0,30)}…</td><td>${k.status}</td><td>${k.expiry}</td></tr>`);
+  
+  document.getElementById('results').classList.add('visible');
+}
+
+function runBulk() {
+  const lines = document.getElementById('bulkInput').value.split('\n').filter(l => l.trim());
+  const container = document.getElementById('bulkResults'); container.innerHTML = '';
+  lines.forEach((line, i) => {
+    const { cookies } = parseCookies(line);
+    const ok = REQUIRED.every(k => cookies[k]);
+    container.innerHTML += `<div style="padding:10px;background:var(--s2);border-radius:4px;font-size:11px;display:flex;justify-content:space-between">
+      <span style="color:var(--muted)">#${i+1}</span>
+      <span class="badge ${ok?'badge-green':'badge-red'}">${ok?'Valid':'Invalid'}</span>
+    </div>`;
+  });
+}
+
+function switchTab(id) {
+  document.getElementById('tab-single').style.display = id === 'single' ? '' : 'none';
+  document.getElementById('tab-bulk').style.display = id === 'bulk' ? '' : 'none';
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase().includes(id)));
+}
+
+function switchDTab(id) {
+  document.querySelectorAll('.dtab-content').forEach(c => c.classList.toggle('active', c.id.includes(id)));
+  document.querySelectorAll('.dtab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase().includes(id)));
+}
+
+function clearAll() {
+  document.getElementById('cookieInput').value = '';
+  document.getElementById('results').classList.remove('visible');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function loadExample(type) {
+  const EX = {
+    header: 'NetflixId=abc123xyz; SecureNetflixId=def456uvw; nfvdid=123',
+    json: '[{"name":"NetflixId","value":"abc123xyz"},{"name":"SecureNetflixId","value":"def456uvw"}]',
+    netscape: '.netflix.com\tTRUE\t/\tTRUE\t2147483647\tNetflixId\tabc123xyz',
+    lines: 'NetflixId=abc123xyz\nSecureNetflixId=def456uvw'
+  };
+  document.getElementById('cookieInput').value = EX[type];
+  detectFormat(EX[type]);
+}
+
+document.getElementById('cookieInput').addEventListener('input', e => detectFormat(e.target.value));
 </script>
-
 </body>
 </html>
