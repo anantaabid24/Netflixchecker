@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Netflix Cookie Checker</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080808;
+  --s1: #0f0f0f;
+  --s2: #141414;
+  --s3: #1a1a1a;
+  --border: #222;
+  --border2: #2a2a2a;
+  --red: #e50914;
+  --red2: #ff2d38;
+  --green: #00e676;
+  --yellow: #ffea00;
+  --blue: #448aff;
+  --text: #f2f2f2;
+  --muted: #666;
+  --muted2: #444;
+  --font: 'Syne', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Background grid */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(229,9,20,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(229,9,20,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glow-orb {
+  position: fixed;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(229,9,20,0.12) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+}
+
+/* Header */
+header {
+  margin-bottom: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.logo-n {
+  font-size: 52px;
+  font-weight: 800;
+  color: var(--red);
+  line-height: 1;
+  text-shadow: 0 0 30px rgba(229,9,20,0.5);
+  letter-spacing: -2px;
+}
+
+.logo-text {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.logo-text small {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  color: var(--muted);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--s1);
+  margin-top: 16px;
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: blink 2s infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.tab.active {
+  background: var(--s3);
+  color: var(--text);
+  border: 1px solid var(--border2);
+}
+
+.tab:hover:not(.active) { color: var(--text); }
+
+/* Input panel */
+.panel {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.panel-head {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.panel-head-left { display: flex; align-items: center; gap: 8px; }
+
+.badge {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.badge-red { background: rgba(229,9,20,0.15); color: var(--red); border: 1px solid rgba(229,9,20,0.3); }
+.badge-green { background: rgba(0,230,118,0.1); color: var(--green); border: 1px solid rgba(0,230,118,0.25); }
+.badge-yellow { background: rgba(255,234,0,0.08); color: var(--yellow); border: 1px solid rgba(255,234,0,0.2); }
+.badge-blue { background: rgba(68,138,255,0.1); color: var(--blue); border: 1px solid rgba(68,138,255,0.25); }
+.badge-muted { background: var(--s2); color: var(--muted); border: 1px solid var(--border); }
+
+.panel-body { padding: 20px; }
+
+textarea {
+  width: 100%;
+  height: 200px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  padding: 16px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+}
+
+textarea:focus { border-color: rgba(229,9,20,0.5); }
+textarea::placeholder { color: #282828; }
+
+/* Format hints */
+.format-hints {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.fmt-pill {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.fmt-pill:hover { border-color: var(--red); color: var(--red2); }
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 13px 20px;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: var(--red);
+  color: #fff;
+  flex: 1;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.btn-primary:hover { background: var(--red2); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(229,9,20,0.3); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-secondary {
+  background: var(--s2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover { color: var(--text); border-color: var(--border2); }
+
+.btn-icon {
+  background: var(--s2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 13px 14px;
+}
+.btn-icon:hover { color: var(--text); border-color: var(--border2); }
+
+/* Loading */
+.loading-bar {
+  display: none;
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.loading-bar.visible { display: block; }
+
+.loading-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--red), var(--red2));
+  border-radius: 1px;
+  animation: loadfill 0.7s ease forwards;
+}
+
+@keyframes loadfill { from { width: 0; } to { width: 100%; } }
+
+.loading-text {
+  display: none;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 8px;
+  animation: fadepulse 0.8s infinite alternate;
+}
+
+.loading-text.visible { display: block; }
+@keyframes fadepulse { from { opacity: 0.4; } to { opacity: 1; } }
+
+/* Results */
+.results { display: none; animation: slideUp 0.35s ease; }
+.results.visible { display: block; }
+
+@keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Result header */
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+}
+
+.result-header.valid { background: rgba(0,230,118,0.05); border-color: rgba(0,230,118,0.2); }
+.result-header.invalid { background: rgba(229,9,20,0.06); border-color: rgba(229,9,20,0.2); }
+.result-header.warning { background: rgba(255,234,0,0.04); border-color: rgba(255,234,0,0.15); }
+
+.result-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.result-icon-big {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.valid .result-icon-big { background: rgba(0,230,118,0.1); border: 1px solid rgba(0,230,118,0.3); }
+.invalid .result-icon-big { background: rgba(229,9,20,0.1); border: 1px solid rgba(229,9,20,0.3); }
+.warning .result-icon-big { background: rgba(255,234,0,0.08); border: 1px solid rgba(255,234,0,0.25); }
+
+.result-headline {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.valid .result-headline { color: var(--green); }
+.invalid .result-headline { color: var(--red2); }
+.warning .result-headline { color: var(--yellow); }
+
+.result-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+
+.result-actions { display: flex; gap: 8px; }
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-bottom: none;
+}
+
+.stat-box {
+  background: var(--s1);
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-val {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Details table */
+.details-panel {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+}
+
+.details-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--s2);
+}
+
+.dtab {
+  padding: 10px 18px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.dtab.active { color: var(--text); border-bottom-color: var(--red); }
+.dtab:hover:not(.active) { color: var(--text); }
+
+.dtab-content { display: none; }
+.dtab-content.active { display: block; }
+
+/* Cookie keys table */
+.keys-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.keys-table th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  background: var(--s2);
+  font-weight: 400;
+}
+
+.keys-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: #ccc;
+}
+
+.keys-table tr:last-child td { border-bottom: none; }
+.keys-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.key-name { color: var(--text); font-weight: 500; }
+.key-val { color: var(--muted); max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.key-val:hover { white-space: normal; word-break: break-all; }
+
+/* Raw export */
+.raw-box {
+  padding: 16px;
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Summary */
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px;
+}
+
+.summary-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 14px;
+}
+
+.summary-key {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.summary-val {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.summary-val.ok { color: var(--green); }
+.summary-val.bad { color: var(--red2); }
+.summary-val.warn { color: var(--yellow); }
+
+/* Export area */
+.export-area {
+  padding: 16px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--s1); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 12px 18px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  letter-spacing: 0.08em;
+  z-index: 1000;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.2s;
+  pointer-events: none;
+}
+
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* Responsive */
+@media (max-width: 560px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .summary-grid { grid-template-columns: 1fr; }
+  .result-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<div class="glow-orb"></div>
+
+<div class="container">
+  <header>
+    <div class="logo-wrap">
+      <div class="logo-n">N</div>
+      <div class="logo-text">
+        Cookie Inspector
+        <small>Session Validator — Local Only</small>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      Offline · No data transmitted · 100% local
+    </div>
+  </header>
+
+  <!-- Input tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('single')">Single Cookie</div>
+    <div class="tab" onclick="switchTab('bulk')">Bulk Check</div>
+  </div>
+
+  <!-- Single mode -->
+  <div id="tab-single">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <span>Cookie Input</span>
+          <span class="badge badge-muted" id="format-detected">Format: —</span>
+        </div>
+        <span style="font-size:9px">Ctrl+Enter to check</span>
+      </div>
+      <div class="panel-body">
+        <textarea id="cookieInput" placeholder="Paste your Netflix cookie string here...
+
+Supported formats:
+  • Header string:    NetflixId=abc; SecureNetflixId=xyz
+  • JSON array:       [{&quot;name&quot;:&quot;NetflixId&quot;,&quot;value&quot;:&quot;...&quot;}]
+  • JSON object:      {&quot;NetflixId&quot;:&quot;...&quot;}
+  • Netscape format:  .netflix.com TRUE / TRUE 0 NetflixId abc
+  • Line-by-line:     NetflixId=abc
+                      SecureNetflixId=xyz" oninput="detectFormat(this.value)"></textarea>
+
+        <div class="format-hints">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em;align-self:center">EXAMPLES →</span>
+          <span class="fmt-pill" onclick="loadExample('header')">Header String</span>
+          <span class="fmt-pill" onclick="loadExample('json')">JSON Array</span>
+          <span class="fmt-pill" onclick="loadExample('netscape')">Netscape</span>
+          <span class="fmt-pill" onclick="loadExample('lines')">Line-by-line</span>
+        </div>
+
+        <!-- File drop zone -->
+        <div id="dropZone" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)" onclick="document.getElementById('fileInput').click()" style="
+          margin-top:14px;
+          border:1px dashed var(--border2);
+          border-radius:4px;
+          padding:14px 20px;
+          display:flex;
+          align-items:center;
+          gap:12px;
+          cursor:pointer;
+          transition:all 0.15s;
+          background:var(--bg);
+        ">
+          <span style="font-size:18px">📂</span>
+          <div>
+            <div style="font-family:var(--mono);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Drop file or click to browse</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--muted2);margin-top:3px">.txt · .json · .har — file contents load into the input above</div>
+          </div>
+          <span id="fileLabel" style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em"></span>
+        </div>
+        <input type="file" id="fileInput" accept=".txt,.json,.har" style="display:none" onchange="loadFile(this)">
+
+        <div class="actions">
+          <button class="btn btn-primary" id="checkBtn" onclick="runCheck()">
+            <span>▶</span> Analyse Cookie
+          </button>
+          <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
+          <button class="btn btn-icon" title="Paste from clipboard" onclick="pasteClip()">📋</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="loading-bar" id="loadBar"><div class="loading-fill"></div></div>
+    <div class="loading-text" id="loadText">Parsing cookie data...</div>
+  </div>
+
+  <!-- Bulk mode -->
+  <div id="tab-bulk" style="display:none">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <span>Bulk Input</span>
+          <span class="badge badge-muted">One cookie per line (header format)</span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <textarea id="bulkInput" style="height:180px" placeholder="Paste multiple cookies, one per line:
+NetflixId=abc1; SecureNetflixId=xyz1
+NetflixId=abc2; SecureNetflixId=xyz2
+..."></textarea>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="runBulk()"><span>▶</span> Check All</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('bulkInput').value=''; document.getElementById('bulkResults').innerHTML=''">Clear</button>
+        </div>
+      </div>
+    </div>
+    <div id="bulkResults" style="margin-top:16px;display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+
+  <!-- Results (single) -->
+  <div class="results" id="results" style="margin-top:16px">
+
+    <div class="result-header" id="resultHeader">
+      <div class="result-status">
+        <div class="result-icon-big" id="resultIconBig"></div>
+        <div>
+          <div class="result-headline" id="resultHeadline"></div>
+          <div class="result-sub" id="resultSub"></div>
+        </div>
+      </div>
+      <div class="result-actions">
+        <button class="btn btn-icon" title="Copy result as text" onclick="copyResult()">📄 Copy</button>
+        <button class="btn btn-icon" title="Export JSON" onclick="exportJSON()">⬇ JSON</button>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-val" id="statTotal">—</div>
+        <div class="stat-label">Total Keys</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="statSession">—</div>
+        <div class="stat-label">Session Keys</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="statFormat">—</div>
+        <div class="stat-label">Format</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="statExpiry">—</div>
+        <div class="stat-label">Expiry</div>
+      </div>
+    </div>
+
+    <div class="details-panel">
+      <div class="details-tabs">
+        <div class="dtab active" onclick="switchDTab('summary')">Summary</div>
+        <div class="dtab" onclick="switchDTab('keys')">All Keys</div>
+        <div class="dtab" onclick="switchDTab('raw')">Raw Output</div>
+      </div>
+
+      <div class="dtab-content active" id="dtab-summary">
+        <div class="summary-grid" id="summaryGrid"></div>
+      </div>
+
+      <div class="dtab-content" id="dtab-keys">
+        <table class="keys-table">
+          <thead>
+            <tr>
+              <th>Key Name</th>
+              <th>Value (truncated)</th>
+              <th>Status</th>
+              <th>Expiry</th>
+            </tr>
+          </thead>
+          <tbody id="keysBody"></tbody>
+        </table>
+      </div>
+
+      <div class="dtab-content" id="dtab-raw">
+        <div class="raw-box" id="rawBox"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Constants ───────────────────────────────────────────────────────────────
+const REQUIRED = ['NetflixId', 'SecureNetflixId'];
+const SESSION  = ['NetflixId', 'SecureNetflixId', 'nfvdid', 'memclid'];
+const HELPFUL  = ['membershipStatus','profilesNewSession','nfvdid','clSharedContext','lhpuuidhasset','memclid','flwssn'];
+const NETFLIX_DOMAIN_KEYS = [...REQUIRED, ...HELPFUL, 'nfvdid','memclid','flwssn','profilesNewSession','clSharedContext'];
+
+let lastResult = null;
+
+// ─── Format detection ─────────────────────────────────────────────────────────
+function detectFormat(raw) {
+  raw = raw.trim();
+  let fmt = '—';
+  if (!raw) { }
+  else if (raw.startsWith('[')) fmt = 'JSON Array';
+  else if (raw.startsWith('{')) fmt = 'JSON Object';
+  else if (raw.includes('\t') && raw.includes('.netflix.com')) fmt = 'Netscape';
+  else if (raw.includes('=') && raw.includes(';')) fmt = 'Header String';
+  else if (raw.includes('=') && raw.includes('\n')) fmt = 'Line-by-line';
+  else if (raw.includes('=')) fmt = 'Key=Value';
+  document.getElementById('format-detected').textContent = 'Format: ' + fmt;
+}
+
+// ─── Parsers ──────────────────────────────────────────────────────────────────
+function parseCookies(raw) {
+  raw = raw.trim();
+  const cookies = {};
+  let format = 'unknown';
+
+  // JSON array (EditThisCookie, etc.)
+  if (raw.startsWith('[')) {
+    try {
+      const arr = JSON.parse(raw);
+      format = 'JSON Array';
+      arr.forEach(c => {
+        if (c.name) cookies[c.name] = {
+          value: c.value || '',
+          expiry: c.expirationDate || c.expires || c.expiry || null,
+          domain: c.domain || '',
+          httpOnly: c.httpOnly || false,
+          secure: c.secure || false,
+          path: c.path || '/'
+        };
+      });
+      return { cookies, format };
+    } catch(e) {}
+  }
+
+  // JSON object
+  if (raw.startsWith('{')) {
+    try {
+      const obj = JSON.parse(raw);
+      format = 'JSON Object';
+      Object.entries(obj).forEach(([k, v]) => {
+        cookies[k] = {
+          value: typeof v === 'object' ? (v.value || '') : String(v),
+          expiry: typeof v === 'object' ? (v.expiry || v.expires || null) : null,
+          domain: '', httpOnly: false, secure: false, path: '/'
+        };
+      });
+      return { cookies, format };
+    } catch(e) {}
+  }
+
+  // Netscape format (tab-separated)
+  if (raw.includes('\t')) {
+    const lines = raw.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+    let matched = 0;
+    lines.forEach(line => {
+      const parts = line.split('\t');
+      if (parts.length >= 7) {
+        const [domain,,path,secure,expiry,name,value] = parts;
+        cookies[name.trim()] = {
+          value: value ? value.trim() : '',
+          expiry: expiry ? parseInt(expiry) : null,
+          domain: domain.trim(),
+          secure: secure === 'TRUE',
+          httpOnly: false,
+          path: path.trim()
+        };
+        matched++;
+      }
+    });
+    if (matched > 0) return { cookies, format: 'Netscape' };
+  }
+
+  // Header / semicolon-separated
+  if (raw.includes(';') && !raw.includes('\n')) {
+    format = 'Header String';
+    raw.split(';').forEach(pair => {
+      pair = pair.trim();
+      const idx = pair.indexOf('=');
+      if (idx > 0) {
+        cookies[pair.slice(0, idx).trim()] = {
+          value: pair.slice(idx + 1).trim(),
+          expiry: null, domain: '', httpOnly: false, secure: false, path: '/'
+        };
+      }
+    });
+    return { cookies, format };
+  }
+
+  // Line-by-line
+  format = 'Line-by-line';
+  raw.split('\n').forEach(line => {
+    line = line.trim();
+    const idx = line.indexOf('=');
+    if (idx > 0) {
+      cookies[line.slice(0, idx).trim()] = {
+        value: line.slice(idx + 1).trim(),
+        expiry: null, domain: '', httpOnly: false, secure: false, path: '/'
+      };
+    }
+  });
+
+  return { cookies, format };
+}
+
+function checkExpiry(expiry) {
+  if (expiry === null || expiry === undefined || expiry === '') return null;
+  let ts = typeof expiry === 'number' ? expiry * 1000 : Date.parse(expiry);
+  if (isNaN(ts)) {
+    // try as seconds string
+    const n = parseInt(expiry);
+    if (!isNaN(n) && n > 1e9) ts = n * 1000;
+    else return null;
+  }
+  const diff = ts - Date.now();
+  if (diff < 0) return { expired: true, label: 'Expired', ts };
+  const days = Math.floor(diff / 86400000);
+  const hrs  = Math.floor((diff % 86400000) / 3600000);
+  const label = days > 0 ? days + 'd ' + hrs + 'h remaining' : hrs + 'h remaining';
+  return { expired: false, label, ts };
+}
+
+// ─── Main check ──────────────────────────────────────────────────────────────
+function runCheck() {
+  const raw = document.getElementById('cookieInput').value;
+  if (!raw.trim()) { showToast('Paste a cookie first!'); return; }
+
+  document.getElementById('loadBar').classList.add('visible');
+  document.getElementById('loadText').classList.add('visible');
+  document.getElementById('results').classList.remove('visible');
+
+  setTimeout(() => {
+    document.getElementById('loadBar').classList.remove('visible');
+    document.getElementById('loadText').classList.remove('visible');
+    analyse(raw);
+  }, 700);
+}
+
+function analyse(raw) {
+  let parsed;
+  try { parsed = parseCookies(raw); }
+  catch(e) {
+    renderResult({ status: 'invalid', headline: 'Parse Error', sub: e.message, cookies: {}, format: '?', keys: 0, sessionKeys: 0, expiryLabel: '?', summaryItems: [], allKeys: [] });
+    return;
+  }
+
+  const { cookies, format } = parsed;
+  const keys = Object.keys(cookies);
+
+  if (keys.length === 0) {
+    renderResult({ status: 'invalid', headline: 'No Keys Found', sub: 'Could not extract any cookie pairs from the input.', cookies, format, keys: 0, sessionKeys: 0, expiryLabel: '?', summaryItems: [], allKeys: [] });
+    return;
+  }
+
+  const missingReq = REQUIRED.filter(k => !cookies[k]);
+  const presentReq = REQUIRED.filter(k => cookies[k]);
+  const presentHelp = HELPFUL.filter(k => cookies[k]);
+  const sessionCount = SESSION.filter(k => cookies[k]).length;
+
+  // Expiry check
+  let anyExpired = false, expiryLabel = 'No timestamps';
+  const expiryResults = [];
+  SESSION.forEach(k => {
+    if (cookies[k] && cookies[k].expiry !== null) {
+      const exp = checkExpiry(cookies[k].expiry);
+      if (exp) {
+        if (exp.expired) anyExpired = true;
+        expiryResults.push({ key: k, ...exp });
+      }
+    }
+  });
+  if (expiryResults.length > 0) {
+    expiryLabel = anyExpired ? 'Expired' : expiryResults[0].label;
+  }
+
+  const confidence = presentHelp.length >= 4 ? 'High' : presentHelp.length >= 2 ? 'Medium' : presentHelp.length >= 1 ? 'Low' : 'Very Low';
+
+  // Summary items
+  const summaryItems = [
+    { key: 'NetflixId', val: cookies['NetflixId'] ? '✓ Present' : '✗ Missing', state: cookies['NetflixId'] ? 'ok' : 'bad' },
+    { key: 'SecureNetflixId', val: cookies['SecureNetflixId'] ? '✓ Present' : '✗ Missing', state: cookies['SecureNetflixId'] ? 'ok' : 'bad' },
+    { key: 'Total Keys', val: keys.length + ' detected', state: '' },
+    { key: 'Session Keys', val: sessionCount + ' / ' + SESSION.length, state: sessionCount >= 2 ? 'ok' : 'warn' },
+    { key: 'Confidence', val: confidence, state: confidence === 'High' ? 'ok' : confidence === 'Very Low' ? 'bad' : 'warn' },
+    { key: 'Cookie Format', val: format, state: '' },
+    { key: 'membershipStatus', val: cookies['membershipStatus'] ? cookies['membershipStatus'].value || '✓' : '✗ Not found', state: cookies['membershipStatus'] ? 'ok' : 'warn' },
+    { key: 'nfvdid', val: cookies['nfvdid'] ? '✓ Present' : '✗ Missing', state: cookies['nfvdid'] ? 'ok' : 'warn' },
+    ...(expiryResults.length > 0 ? expiryResults.map(e => ({ key: 'Expiry (' + e.key + ')', val: e.label, state: e.expired ? 'bad' : 'ok' })) : [{ key: 'Expiry', val: 'No timestamps found', state: 'warn' }])
+  ];
+
+  // All keys for table
+  const allKeys = keys.map(k => {
+    const c = cookies[k];
+    const isReq = REQUIRED.includes(k);
+    const isHelp = HELPFUL.includes(k);
+    const exp = checkExpiry(c.expiry);
+    return {
+      name: k,
+      value: c.value,
+      status: isReq ? 'required' : isHelp ? 'session' : 'other',
+      expiry: exp ? exp.label : (c.expiry !== null ? String(c.expiry) : '—'),
+      expiryState: exp ? (exp.expired ? 'bad' : 'ok') : ''
+    };
+  }).sort((a, b) => {
+    const order = { required: 0, session: 1, other: 2 };
+    return order[a.status] - order[b.status];
+  });
+
+  let status, headline, sub;
+  if (missingReq.length > 0) {
+    status = 'invalid';
+    headline = 'Invalid Cookie';
+    sub = 'Missing: ' + missingReq.join(', ');
+  } else if (anyExpired) {
+    status = 'invalid';
+    headline = 'Cookie Expired';
+    sub = 'Session keys found but expiry timestamp has passed.';
+  } else {
+    status = 'valid';
+    headline = 'Cookie Valid';
+    sub = 'All required session keys present · Confidence: ' + confidence;
+  }
+
+  const result = { status, headline, sub, cookies, format, keys: keys.length, sessionKeys: sessionCount, expiryLabel, summaryItems, allKeys, raw };
+  lastResult = result;
+  renderResult(result);
+}
+
+function renderResult(r) {
+  const header = document.getElementById('resultHeader');
+  header.className = 'result-header ' + r.status;
+
+  const icons = { valid: '✓', invalid: '✕', warning: '!' };
+  document.getElementById('resultIconBig').textContent = icons[r.status] || '?';
+  document.getElementById('resultHeadline').textContent = r.headline;
+  document.getElementById('resultSub').textContent = r.sub;
+
+  document.getElementById('statTotal').textContent = r.keys;
+  document.getElementById('statTotal').style.color = r.keys > 0 ? 'var(--text)' : 'var(--red2)';
+  document.getElementById('statSession').textContent = r.sessionKeys + '/' + SESSION.length;
+  document.getElementById('statSession').style.color = r.sessionKeys >= 2 ? 'var(--green)' : 'var(--red2)';
+  document.getElementById('statFormat').textContent = r.format;
+  document.getElementById('statExpiry').textContent = r.expiryLabel;
+  document.getElementById('statExpiry').style.color = r.expiryLabel === 'Expired' ? 'var(--red2)' : r.expiryLabel === 'No timestamps' ? 'var(--muted)' : 'var(--green)';
+
+  // Summary grid
+  const sg = document.getElementById('summaryGrid');
+  sg.innerHTML = '';
+  r.summaryItems.forEach(item => {
+    sg.innerHTML += `<div class="summary-item">
+      <div class="summary-key">${item.key}</div>
+      <div class="summary-val ${item.state}">${item.val}</div>
+    </div>`;
+  });
+
+  // Keys table
+  const kb = document.getElementById('keysBody');
+  kb.innerHTML = '';
+  r.allKeys.forEach(k => {
+    const statusBadge = k.status === 'required'
+      ? '<span class="badge badge-red">Required</span>'
+      : k.status === 'session'
+      ? '<span class="badge badge-blue">Session</span>'
+      : '<span class="badge badge-muted">Other</span>';
+    kb.innerHTML += `<tr>
+      <td class="key-name">${k.name}</td>
+      <td class="key-val" title="${escHtml(k.value)}">${escHtml(k.value.slice(0,50))}${k.value.length > 50 ? '…' : ''}</td>
+      <td>${statusBadge}</td>
+      <td style="font-family:var(--mono);font-size:10px" class="${k.expiryState}">${k.expiry}</td>
+    </tr>`;
+  });
+
+  // Raw
+  document.getElementById('rawBox').textContent = buildRaw(r);
+
+  document.getElementById('results').classList.add('visible');
+}
+
+function buildRaw(r) {
+  const lines = [
+    '=== NETFLIX COOKIE ANALYSIS ===',
+    'Date: ' + new Date().toISOString(),
+    'Status: ' + r.status.toUpperCase(),
+    'Headline: ' + r.headline,
+    'Format: ' + r.format,
+    'Total Keys: ' + r.keys,
+    'Session Keys: ' + r.sessionKeys + '/' + SESSION.length,
+    'Expiry: ' + r.expiryLabel,
+    '',
+    '--- KEY DETAILS ---'
+  ];
+  r.allKeys.forEach(k => {
+    lines.push('[' + k.status.toUpperCase() + '] ' + k.name + ' = ' + k.value + ' | expiry: ' + k.expiry);
+  });
+  return lines.join('\n');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Bulk check ───────────────────────────────────────────────────────────────
+function runBulk() {
+  const raw = document.getElementById('bulkInput').value;
+  const lines = raw.split('\n').filter(l => l.trim());
+  const container = document.getElementById('bulkResults');
+  container.innerHTML = '';
+
+  if (lines.length === 0) { showToast('No cookies to check!'); return; }
+
+  lines.forEach((line, i) => {
+    try {
+      const { cookies } = parseCookies(line);
+      const missing = REQUIRED.filter(k => !cookies[k]);
+      const ok = missing.length === 0;
+      const div = document.createElement('div');
+      div.style.cssText = 'padding:12px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid ' + (ok ? 'rgba(0,230,118,0.2)' : 'rgba(229,9,20,0.2)') + ';background:' + (ok ? 'rgba(0,230,118,0.04)' : 'rgba(229,9,20,0.05)');
+      div.innerHTML = `<span style="color:var(--muted)">#${i+1}</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#aaa">${escHtml(line.slice(0,60))}…</span>
+        <span class="badge ${ok ? 'badge-green' : 'badge-red'}">${ok ? '✓ Valid' : '✗ Invalid'}</span>`;
+      container.appendChild(div);
+    } catch(e) {
+      const div = document.createElement('div');
+      div.style.cssText = 'padding:12px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;border:1px solid var(--border);color:var(--muted)';
+      div.textContent = '#' + (i+1) + ' — Parse error';
+      container.appendChild(div);
+    }
+  });
+
+  // Summary line
+  const valid = container.querySelectorAll('.badge-green').length;
+  const total = lines.length;
+  const sum = document.createElement('div');
+  sum.style.cssText = 'padding:12px 16px;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.1em;text-align:center;border-top:1px solid var(--border);margin-top:4px';
+  sum.textContent = 'RESULT: ' + valid + '/' + total + ' valid (' + Math.round(valid/total*100) + '%)';
+  container.appendChild(sum);
+}
+
+// ─── UI helpers ───────────────────────────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.tabs .tab').forEach((t, i) => t.classList.toggle('active', i === (id === 'single' ? 0 : 1)));
+  document.getElementById('tab-single').style.display = id === 'single' ? '' : 'none';
+  document.getElementById('tab-bulk').style.display = id === 'bulk' ? '' : 'none';
+}
+
+function switchDTab(id) {
+  document.querySelectorAll('.dtab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.dtab-content').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('dtab-' + id).classList.add('active');
+}
+
+function clearAll() {
+  document.getElementById('cookieInput').value = '';
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('format-detected').textContent = 'Format: —';
+  document.getElementById('fileLabel').textContent = '';
+  document.getElementById('fileInput').value = '';
+}
+
+// ─── File loading ─────────────────────────────────────────────────────────────
+function loadFile(input) {
+  const file = input.files[0];
+  if (file) readFile(file);
+}
+
+function readFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['txt','json','har'].includes(ext)) {
+    showToast('Unsupported type. Use .txt, .json or .har');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    let content = e.target.result;
+    if (ext === 'har') {
+      try {
+        const har = JSON.parse(content);
+        const entries = har?.log?.entries || [];
+        const netflixEntry = entries.find(en =>
+          en.request?.url?.includes('netflix.com') ||
+          (en.request?.cookies || []).some(c => ['NetflixId','SecureNetflixId'].includes(c.name))
+        );
+        if (netflixEntry) {
+          const cookies = [...(netflixEntry.request?.cookies || []), ...(netflixEntry.response?.cookies || [])];
+          const seen = {};
+          const unique = cookies.filter(c => { if (seen[c.name]) return false; seen[c.name]=true; return true; });
+          content = JSON.stringify(unique.map(c => ({ name: c.name, value: c.value, expires: c.expires||null })));
+        } else { showToast('No Netflix entries found in HAR.'); return; }
+      } catch(err) { showToast('Could not parse HAR file.'); return; }
+    }
+    document.getElementById('cookieInput').value = content;
+    detectFormat(content);
+    document.getElementById('fileLabel').textContent = '✓ ' + file.name;
+    const dz = document.getElementById('dropZone');
+    dz.style.borderColor = 'rgba(0,230,118,0.5)';
+    setTimeout(() => { dz.style.borderColor = ''; }, 2000);
+    showToast('Loaded: ' + file.name);
+  };
+  reader.onerror = () => showToast('Failed to read file.');
+  reader.readAsText(file);
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  const dz = document.getElementById('dropZone');
+  dz.style.borderColor = 'var(--red)';
+  dz.style.background = 'rgba(229,9,20,0.05)';
+}
+
+function onDragLeave() {
+  const dz = document.getElementById('dropZone');
+  dz.style.borderColor = '';
+  dz.style.background = '';
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  onDragLeave();
+  const file = e.dataTransfer.files[0];
+  if (file) readFile(file);
+}
+
+async function pasteClip() {
+  try {
+    const text = await navigator.clipboard.readText();
+    document.getElementById('cookieInput').value = text;
+    detectFormat(text);
+    showToast('Pasted from clipboard!');
+  } catch(e) { showToast('Clipboard access denied.'); }
+}
+
+function copyResult() {
+  if (!lastResult) return;
+  navigator.clipboard.writeText(buildRaw(lastResult)).then(() => showToast('Result copied!')).catch(() => showToast('Copy failed.'));
+}
+
+function exportJSON() {
+  if (!lastResult) return;
+  const data = {
+    timestamp: new Date().toISOString(),
+    status: lastResult.status,
+    headline: lastResult.headline,
+    format: lastResult.format,
+    totalKeys: lastResult.keys,
+    sessionKeys: lastResult.sessionKeys,
+    expiry: lastResult.expiryLabel,
+    keys: lastResult.allKeys
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cookie-check-' + Date.now() + '.json';
+  a.click();
+  showToast('JSON exported!');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// Example loaders
+const EXAMPLES = {
+  header: 'NetflixId=ABCdef123xyz; SecureNetflixId=ZZtestCookie456; nfvdid=AQFhQ1a2; membershipStatus=CURRENT_MEMBER; profilesNewSession=0',
+  json: '[{"name":"NetflixId","value":"ABCdef123xyz","expirationDate":9999999999,"domain":".netflix.com","httpOnly":true,"secure":true},{"name":"SecureNetflixId","value":"ZZtestCookie456","expirationDate":9999999999,"domain":".netflix.com"},{"name":"nfvdid","value":"AQFhQ1a2"},{"name":"membershipStatus","value":"CURRENT_MEMBER"}]',
+  netscape: '.netflix.com\tTRUE\t/\tTRUE\t9999999999\tNetflixId\tABCdef123xyz\n.netflix.com\tTRUE\t/\tTRUE\t9999999999\tSecureNetflixId\tZZtestCookie456\n.netflix.com\tTRUE\t/\tFALSE\t0\tnfvdid\tAQFhQ1a2',
+  lines: 'NetflixId=ABCdef123xyz\nSecureNetflixId=ZZtestCookie456\nnfvdid=AQFhQ1a2\nmembershipStatus=CURRENT_MEMBER'
+};
+
+function loadExample(type) {
+  document.getElementById('cookieInput').value = EXAMPLES[type];
+  detectFormat(EXAMPLES[type]);
+  showToast(type + ' example loaded');
+}
+
+// Ctrl+Enter
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') runCheck();
+});
+</script>
+</body>
+</html>
